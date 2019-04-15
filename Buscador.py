@@ -1,41 +1,135 @@
 from bs4 import BeautifulSoup
 import requests
+import requests_cache
 import re
 
-def main():
 
+def main():
     url = input("Digite seu link:")
     palavra = input("Digite a palavra:")
     profundidade = int(input("Digite a profundidade da busca:"))
 
-    #response = requests.get(url)
-    #html = BeautifulSoup(response.text ,'lxml')
-    #links = html.find_all('a')
+    get_deep_link(url, palavra, profundidade)
 
 
-    #for link in links:
-        #if(str(link["href"]).startswith("http")):
-            #print(link['href'])
-
-    get_palavra(url,palavra)
-
-def get_palavra(url,palavra):
-
+def get_palavra(url, palavra):
     try:
 
         response = requests.get(url)
         text = BeautifulSoup(response.text, 'lxml').text
         encontradas = re.findall('\w*.{0,11}' + palavra + '.{0,11}\w*', text, re.IGNORECASE)
-        for palavra in encontradas:
-            print('----' + palavra + '----')
+
+        return encontradas
 
     except:
-        print("Link inválido")
+
         pass
 
-def clear(text):
 
+def get_deep_link(url, palavra, profundidade):
+    links = []
+    palavras = []
+
+    auxiliar = 0
+    profundidade = profundidade - 1
+
+    requests_cache.install_cache('cache')
+
+    if profundidade == -1:
+
+        palavras.append(get_palavra(url, palavra))
+
+    else:
+
+        links.append(get_links(url))
+
+        while auxiliar < profundidade:
+
+            for i in range(len(links[auxiliar])):
+                links.append(repetido(get_links(links[auxiliar][i]), links))
+
+            auxiliar += 1
+
+        palavras.append(get_palavra(url, palavra))
+
+        for i in range(len(links)):
+
+            for j in range(len(links[i])):
+                palavras.append(get_palavra(links[i][j], palavra))
+
+    print_relevancia(url, links, palavras)
+
+
+def get_links(url):
+    try:
+
+        response = requests.get(url)
+        html = BeautifulSoup(response.text, 'lxml')
+        links_pagina = html.find_all('a')
+
+        links = []
+
+        for i in links_pagina:
+
+            if (i.get('href') != None and str(i["href"]).startswith("http") and not str(i["href"]).endswith("pdf")):
+
+                if (i["href"] not in links):
+                    links.append(i.get('href'))
+
+        return links
+
+
+    except:
+
+        pass
+
+
+def clear(text):
     body = text.body
+
+
+def repetido(link, links):
+    link_formatado = []
+
+    for j in range(len(link)):
+
+        contador = 0
+        cont_auxiliar = 0
+
+        while contador < len(links):
+
+            if link[j] not in links[contador]:
+                cont_auxiliar = cont_auxiliar
+
+            else:
+                cont_auxiliar += 1
+
+            contador += 1
+
+        if (cont_auxiliar == 0):
+            link_formatado.append(link[j])
+
+    return link_formatado
+
+
+def print_relevancia(url, links, palavras):
+    novo_vetor_link = []
+
+    contador = 1
+
+    for i in range(len(links)):
+
+        for j in range(len(links[i])):
+            novo_vetor_link.append(links[i][j])
+
+    print("O 1° link ", url, "tem no total de ", len(palavras[0]), " encontradas.\n")
+
+    while contador < len(novo_vetor_link):
+
+        print("O " + str(contador + 1) + "° link " + str(novo_vetor_link[contador]) + "tem no total de " + str(
+            len(palavras[contador])) + " palavras encontradas.\n")
+
+        contador += 1
 
 
 if __name__ == '__main__':

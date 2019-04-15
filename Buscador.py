@@ -116,6 +116,7 @@ def print_relevancia(url, links, palavras):
     novo_vetor_link = []
 
     contador = 1
+    nivel_relevancia = ''
 
     for i in range(len(links)):
 
@@ -126,8 +127,20 @@ def print_relevancia(url, links, palavras):
 
     while contador < len(novo_vetor_link):
 
+        if len(palavras[contador]) == 0:
+            nivel_relevancia = "Busca irrelevante"
+
+        elif len(palavras[contador]) > 0 and len(palavras[contador]) < 10:
+            nivel_relevancia = "Busca pouco relevante"
+
+        elif len(palavras[contador]) >= 10 and len(palavras[contador]) < 25:
+            nivel_relevancia = "Busca relevante"
+
+        elif len(palavras[contador]) >= 25:
+            nivel_relevancia = "Busca muito relevante"
+
         print("O " + str(contador + 1) + "° link " + str(novo_vetor_link[contador]) + "tem no total de " + str(
-            len(palavras[contador])) + " palavras encontradas.\n")
+            len(palavras[contador])) + " palavras encontradas. " + nivel_relevancia + "\n")
 
         contador += 1
 
